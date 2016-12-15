@@ -113,21 +113,13 @@
     </table>
 </div>
 <div ng-show="!loggedIn">
-    <table>
-        <tr>
-            <td>
-                <div>username <input type="text" ng-model="username" maxlength="20"></div>
-                <div>senha  <input type="password" ng-model="password" maxlength="20"></div>
-                <div><a href="#" ng-click="logIn()">Login</a><br><br></div>
-            </td>
-            <td>
-                <div>username <input type="text" ng-model="newUsername" maxlength="20"></div>
-                <div>senha  <input type="password" ng-model="newPassword" maxlength="20"></div>
-                <div>confirmar senha  <input type="password" ng-model="confirmNewPassword" maxlength="20"></div>
-                <div><a href="#" ng-click="newUser()">Novo Usuário</a><br><br></div>
-            </td>
-        </tr>
-    </table>
+    <div>username <input type="text" ng-model="username" maxlength="20"></div>
+    <div>senha  <input type="password" ng-model="password" maxlength="20"></div>
+    <div><a href="#" ng-click="logIn()">Login</a><br><br><br><br>
+    <div>username <input type="text" ng-model="newUsername" maxlength="20"></div>
+    <div>senha  <input type="password" ng-model="newPassword" maxlength="20"></div>
+    <div>confirmar senha  <input type="password" ng-model="confirmNewPassword" maxlength="20"></div>
+    <div><a href="#" ng-click="newUser()">Novo Usuário</a><br><br>
 </div>
 </body>
 <script>
