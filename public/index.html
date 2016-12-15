@@ -9,68 +9,295 @@
         margin: 3px;
         }
 
-        table.bordered td{
+        td.bordered{
             border-style: solid;
             border-width: 1px;
+            width: 50%
+        }
+
+        .big{
+            font-size: x-large;
+        }
+
+        .red{
+            color: red
+        }
+
+        .green{
+            color: green
+        }
+
+        .yellow{
+            color: orange
         }
     </style>
     <title>Calculadora de desafio</title>
 </head>
 <body>
-<h1>Calculadora de desafio</h1>
-<h3 ng-click="addHero()">Adicionar herói</h3>
-<h3 ng-click="addEnemy()">Adicionar inimigo</h3>
+<div ng-show="loggedIn">
+    <div><a href="#" ng-click="logOut()">Logout</a><br><br></div>
+    <h3>Digite as estatísticas dos personagens</h3> <a href="#" ng-click="save()">Salvar</a>
 
-<table>
-    <tr>
-        <td>
-            <table class="bordered">
-                <tr ng-repeat="hero in heroes">
-                    <td>
-                        NH: <input type="number" ng-model="hero.nh"/> {{100*test(hero.nh) | number: 2}}% <br>
-                        Defesa Ativa: <input type="number" ng-model="hero.defense"/> {{100*(test(hero.defense)) | number: 2}}% <br>
-                        Dano: <input type="number" ng-model="hero.dice"/>d +<input type="number" ng-model="hero.bonus"/> {{averageDamage(hero.dice, hero.bonus)}}<br>
-                        RD: <input type="number" ng-model="hero.rd"/><br>
-                    </td>
-                </tr>
-            </table>
-        </td>
-        <td>
-            <table class="bordered">
-                <tr ng-repeat="enemy in enemies">
-                    <td>
-                        NH: <input type="number" ng-model="enemy.nh"/> {{100*test(enemy.nh) | number: 2}}% <br>
-                        Defesa Ativa: <input type="number" ng-model="enemy.defense"/> {{100*(test(enemy.defense)) | number: 2}}% <br>
-                        Dano: <input type="number" ng-model="enemy.dice"/>d +<input type="number" ng-model="enemy.bonus"/> {{averageDamage(enemy.dice, enemy.bonus)}}<br>
-                        RD: <input type="number" ng-model="enemy.rd"/><br>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
+    <table height="40px">
+        <tr>
+            <td>
+                <a href="#" ng-click="addEnemy()">Adicionar inimigo</a><br><br>
+                <a href="#" ng-click="addHero()">Adicionar herói</a><br><br>
+            </td>
+            <td class="bordered" ng-show="enemies.length > 0">
+                Redutor de defesa: <input min="0" type="number" ng-model="reduction"/>
+                Ignora RD? <input type="checkbox" ng-model="ignoreRD"/>
+            </td>
+        </tr>
+    </table>
 
-
-<!--
-Chance de acertar: {{100*toHit(nh, defense) | number: 2}}% <br>
-Chance de danificar: {{100*toDamage(nh, defense, dice, bonus, rd) | number: 2}}%
--->
-
+    <table>
+        <tr>
+            <td>
+                <table style="overflow-y: auto; display: block; height: 700px">
+                    <tr ng-repeat="enemy in enemies">
+                        <td class="bordered">
+                            Nome: <input type="text" ng-model="enemy.name"/> <br>
+                            NH: <input type="number" ng-model="enemy.nh"/> <br>
+                            Defesa Ativa: <input type="number" ng-model="enemy.defense"/> <br>
+                            Dano: <input type="number" ng-model="enemy.dice"/>d +<input type="number" ng-model="enemy.bonus"/> <br>
+                            RD: <input type="number" ng-model="enemy.rd"/><br><br>
+                            JSON: {{exportChar(enemy)}}<br>
+                            <a href="#" ng-click="removeEnemy($index)">Remover</a>
+                            <a href="#" ng-click="clearEnemy($index)">Limpar</a>
+                            <a href="#" ng-click="importEnemy($index)">Importar</a><br><br>
+                        </td>
+                        <td class="bordered">
+                            <table style="width: 100%; text-align: center">
+                                <tr>
+                                    <th>Herói</th>
+                                    <th>Chance do herói causar dano</th>
+                                    <th>Chance do inimigo causar dano</th>
+                                    <th>Dano médio causado ao herói</th>
+                                </tr>
+                                <tr ng-repeat="hero in validHeroes()">
+                                    <td>{{hero.name}}</td>
+                                    <td class="big" ng-class="calculateClass(true, statsAttack(enemy, hero.name))">{{statsAttack(enemy, hero.name) | number: 2}}%</td>
+                                    <td class="big" ng-class="calculateClass(false, statsDefense(enemy, hero.name))">{{statsDefense(enemy, hero.name) | number: 2}}%</td>
+                                    <td class="big">{{statsAverageDamage(enemy, hero.name) | number: 2}}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>MÉDIA</b></td>
+                                    <td class="big" ng-class="calculateClass(true, statsAttack(enemy, 'total'))">{{enemy.stats.total.attack | number: 2}}%</td>
+                                    <td class="big" ng-class="calculateClass(false, statsDefense(enemy, 'total'))">{{enemy.stats.total.defense | number: 2}}%</td>
+                                    <td class="big">{{statsAverageDamage(enemy, 'total') | number: 2}}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table style="overflow-y: auto; display: block; height: 700px">
+                    <tr ng-repeat="hero in heroes">
+                        <td class="bordered">
+                            Nome: <input type="text" ng-model="hero.name"/> Ativo <input type="checkbox" ng-model="hero.active"/> <br>
+                            NH: <input type="number" ng-model="hero.nh"/> <br>
+                            Defesa Ativa: <input type="number" ng-model="hero.defense"/> <br>
+                            Dano: <input type="number" ng-model="hero.dice"/>d +<input type="number" ng-model="hero.bonus"/> <br>
+                            RD: <input type="number" ng-model="hero.rd"/><br><br>
+                            JSON: {{exportChar(hero)}}<br>
+                            <a href="#" ng-click="removeHero($index)">Remover</a>
+                            <a href="#" ng-click="clearHero($index)">Limpar</a>
+                            <a href="#" ng-click="importHero($index)">Importar</a><br><br>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+<div ng-show="!loggedIn">
+    <table>
+        <tr>
+            <td>
+                <div>username <input type="text" ng-model="username" maxlength="20"></div>
+                <div>senha  <input type="password" ng-model="password" maxlength="20"></div>
+                <div><a href="#" ng-click="logIn()">Login</a><br><br></div>
+            </td>
+            <td>
+                <div>username <input type="text" ng-model="newUsername" maxlength="20"></div>
+                <div>senha  <input type="password" ng-model="newPassword" maxlength="20"></div>
+                <div>confirmar senha  <input type="password" ng-model="confirmNewPassword" maxlength="20"></div>
+                <div><a href="#" ng-click="newUser()">Novo Usuário</a><br><br></div>
+            </td>
+        </tr>
+    </table>
+</div>
 </body>
 <script>
 	var app = angular.module('myApp', []);
-	app.controller('calc', ['$scope', function($scope){
+	app.controller('calc', ['$scope', '$http', function($scope, $http){
 
-	    $scope.heroes = [];
-	    $scope.enemies = [];
+        var transform = function(obj) {
+            var str = [];
+            for(var p in obj)
+            str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+            return str.join("&");
+        }
 
-	    var addHero = function(){
-	        $scope.heroes.push({});
-	    }
+        var isHeroValid = function(h){
+            return h.name != null && h.active;
+        }
 
-	    var addEnemy = function(){
-	        $scope.enemies.push({});
-	    }
+        $scope.validHeroes = function(){
+            var valid = [];
+            for(var i = 0; i<$scope.heroes.length; i++){
+                var hero = $scope.heroes[i];
+                if(isHeroValid(hero)){
+                    valid.push(hero);
+                }
+            }
+            return valid;
+        }
+
+        $scope.loggedIn = false;
+
+        $scope.save = function(){
+
+            $http({
+                method: 'POST',
+                url: '/characters',
+                headers: {'Content-Type': 'application/json; charset=UTF-8'},
+                data: {
+                    'username': $scope.username,
+                    'reduction': $scope.reduction,
+                    'ignoreRD': $scope.ignoreRD,
+                    'heroes' : $scope.heroes,
+                    'enemies' : $scope.enemies,
+                },
+            }).then(
+                function(response){
+                   if(response.status == 200){
+                        alert("saved sucessfully!");
+                   }
+                },
+                function(response){
+                   if(response.status == 500){
+                        alert(response.data.error);
+                   }
+                }
+            );
+        }
+
+        $scope.newUser = function(){
+
+            if($scope.newPassword != $scope.confirmNewPassword){
+                alert("Passwords don't match.");
+                return;
+            }
+
+            $http({
+                method: 'POST',
+                url: '/signup',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                transformRequest: transform,
+                data: {
+                    'username': $scope.newUsername,
+                    'password': $scope.newPassword,
+                },
+            }).then(
+                function(response){
+                   if(response.status == 200){
+                        $scope.loggedIn = true;
+                        $scope.username = $scope.newUsername;
+                        delete $scope.password;
+                        delete $scope.newUsername;
+                        delete $scope.newPassword;
+                        delete $scope.confirmNewPassword;
+                   }
+                },
+                function(response){
+                   if(response.status == 500){
+                        alert(response.data.error);
+                   }
+                }
+            );
+        }
+
+        $scope.logIn = function(){
+
+            $http({
+                method: 'POST',
+                url: '/login',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                transformRequest: transform,
+                data: {
+                    'username': $scope.username,
+                    'password': $scope.password,
+                },
+            }).then(
+                function(response){
+                   if(response.status == 200){
+                        $scope.loggedIn = true;
+                        delete $scope.password;
+                        delete $scope.newUsername;
+                        delete $scope.newPassword;
+                        delete $scope.confirmNewPassword;
+
+                        $http({
+                            method: 'GET',
+                            url: '/characters',
+                            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+                            params: {
+                                'username': $scope.username
+                            }
+                        }).then(
+                            function(res){
+                                if(res.status == 200){
+                                    var data = res.data;
+
+                                    $scope.heroes = data.heroes || [];
+                                    $scope.enemies = data.enemies || [];
+                                    $scope.reduction = data.reduction;
+                                    $scope.ignoreRD = data.ignoreRD;
+                                }
+                            },
+                            function(res){
+
+                            }
+                        )
+                   }
+                },
+                function(response){
+                   if(response.status == 500){
+                        alert(response.data.error);
+                   }
+                }
+            );
+        }
+
+        $scope.logOut = function(){
+            delete $scope.username;
+            delete $scope.password;
+            delete $scope.newUsername;
+            delete $scope.newPassword;
+            delete $scope.confirmNewPassword;
+            $scope.heroes = [];
+            $scope.enemies = [];
+            delete $scope.ignoreRD;
+            delete $scope.reduction;
+            $scope.loggedIn = false;
+        }
+
+        /*
+	    $scope.heroes = [
+	        {"name":"Sports","nh":12,"defense":0,"dice":1,"rd":1},
+	        {"name":"Katze","nh":20,"defense":14,"dice":3, bonus:"-2","rd":6},
+	        {"name":"Gimli","nh":22,"defense":16,"dice":3, bonus:"2","rd":13},
+	        {"name":"Stone","nh":14,"defense":11,"dice":2, bonus:"3","rd":7},
+            {"name":"Abu","nh":20,"defense":15,"dice":1, bonus:"3","rd":1},
+	    ];
+        */
+        $scope.heroes = [];
+        $scope.enemies = [];
+        delete $scope.ignoreRD;
+        delete $scope.reduction;
 
 		var averageDamage = function(dice, bonus){
 			return expect(dice)+ (bonus || 0);
@@ -94,6 +321,96 @@ Chance de danificar: {{100*toDamage(nh, defense, dice, bonus, rd) | number: 2}}%
 			return 0;
 		}
 
+		var updateStats = function(){
+		    var enemies = $scope.enemies;
+		    var heroes = $scope.heroes;
+		    var reduction = $scope.reduction || 0;
+            var ignoreRD = $scope.ignoreRD;
+		    for(var i = 0; i < enemies.length; i++){
+		        var enemy = enemies[i];
+		        var attack = 0;
+		        var defense = 0;
+		        var averageDamage = 0;
+		        enemy.stats = {};
+                var count = 0;
+		        for(var j = 0; j < heroes.length; j++){
+                    var hero = heroes[j];
+                    if(isHeroValid(hero)){
+                        count++;
+    		            var hAttack = 100*toDamage(hero.nh, enemy.defense, hero.dice, hero.bonus, enemy.rd);
+    		            var hDefense = 100*toDamage(enemy.nh, hero.defense - reduction, enemy.dice, enemy.bonus, hero.rd, ignoreRD);
+    		            var hAverageDamage = calculateAverageDamage(enemy.dice, enemy.bonus, hero.rd, ignoreRD);
+    		            enemy.stats[hero.name] = {attack: hAttack, defense: hDefense, averageDamage: hAverageDamage};
+                        
+    		            attack += hAttack;
+    		            defense += hDefense;
+    		            averageDamage += hAverageDamage;
+                    }
+                }
+                if(count == 0){
+                    count = 1;
+                }
+                enemy.stats.total = {
+                    attack: attack / count,
+                    defense: defense / count,
+                    averageDamage: averageDamage / count
+                };
+		    }
+		}
+
+		var calculateAverageDamage = function(dice, bonus, rd, ignoreRD){
+		    var safeDice = dice || 0;
+		    if(safeDice == 0){
+		        return 0;
+		    }
+		    var safeBonus = bonus || 0;
+		    var safeRd = !ignoreRD ? rd || 0 : 0;
+
+		    var sum = 0;
+		    var damage = safeRd - safeBonus;
+		    if( damage < safeDice ) {
+		        damage = safeDice;
+		    }
+
+		    var chance = chanceMap[damage][safeDice];
+
+		    while(chance > 0){
+		        sum += chance*(damage+safeBonus-safeRd);
+		        damage++;
+		        chance = chanceMap[damage][safeDice];
+		    }
+
+		    return sum;
+		}
+
+        $scope.$watch('heroes', function(){
+            updateStats();
+        }, true);
+
+		$scope.$watch('enemies', function(){
+		    updateStats();
+		}, true);
+
+		$scope.$watch('reduction', function(){
+		    updateStats();
+		});
+
+        $scope.$watch('ignoreRD', function(){
+            updateStats();
+        });
+
+		var statsAttack = function(enemy, hero){
+		    return enemy.stats[hero].attack;
+		}
+
+		var statsDefense = function(enemy, hero){
+		    return enemy.stats[hero].defense;
+        }
+
+        var statsAverageDamage = function(enemy, hero){
+            return enemy.stats[hero].averageDamage;
+        }
+
 		var acumulate = function(target, dice){
 		    if(target == null || dice == null || target < 1 || dice < 1){
 		        return 0;
@@ -114,17 +431,74 @@ Chance de danificar: {{100*toDamage(nh, defense, dice, bonus, rd) | number: 2}}%
 		    var crit = acumulate(3, 3);
 		    var nonCrit = acumulate(nh, 3) - crit;
 		    nonCrit = nonCrit > 0? nonCrit : 0;
+		    var miss = 1 - acumulate(17, 3);
 		    var def = acumulate(defense, 3);
-		    var hit = crit+nonCrit*(1-def);
-		    return hit;
+		    var hit = crit-miss+nonCrit*(1-def);
+		    return hit > 0 ? hit : 0;
 		};
 
-		var toDamage = function(nh, defense, dice, bonus, rd){
+		var calculateClass = function(hero, value){
+		    if(hero){
+		        if(value < 40){
+		            return "red";
+		        }
+		        if(value < 60){
+                    return "yellow";
+		        }
+		        return "green";
+		    }
+		    if(value < 40){
+                return "green";
+            }
+            if(value < 60){
+                return "yellow";
+            }
+            return "red";
+
+		}
+
+		var toDamage = function(nh, defense, dice, bonus, rd, ignoreRD){
 		    if(dice == null || dice <= 0){
 		        return 0;
 		    }
-		    return toHit(nh, defense)*(1-acumulate(rd-bonus, dice));
+		    var safeBonus = bonus || 0;
+            var calc = !ignoreRD ? rd - safeBonus : 0;
+		    return toHit(nh, defense)*(1-acumulate(calc, dice));
 		};
+
+		var exportChar = function(char){
+		    return {
+		        name: char.name,
+		        nh: char.nh,
+		        defense: char.defense,
+		        dice: char.dice,
+		        bonus: char.bonus,
+		        rd: char.rd,
+                active: char.active,
+		    }
+		}
+
+		var importEnemy = function(index){
+		    var json = prompt();
+		    if(json != null && json != ""){
+		        $scope.enemies[index] = JSON.parse(json);
+            }
+		}
+
+        var importHero = function(index){
+            var json = prompt();
+            if(json != null && json != ""){
+                $scope.heroes[index] = JSON.parse(json);
+            }
+        }
+
+		var clearEnemy = function(index){
+		    $scope.enemies[index] = {};
+		}
+
+        var clearHero = function(index){
+            $scope.heroes[index] = {};
+        }
 
 		var chanceMap =[[0.16666667,0.00000000,0.00000000,0.00000000,0.00000000,0.00000000,0.00000000,0.00000000,0.00000000],
                         [0.16666667,0.02777778,0.00000000,0.00000000,0.00000000,0.00000000,0.00000000,0.00000000,0.00000000],
@@ -196,8 +570,19 @@ Chance de danificar: {{100*toDamage(nh, defense, dice, bonus, rd) | number: 2}}%
 		$scope.averageDamage  = averageDamage;
 		$scope.toHit = toHit;
 		$scope.toDamage = toDamage;
-		$scope.addHero = addHero;
-		$scope.addEnemy = addEnemy;
+		$scope.importEnemy = importEnemy;
+		$scope.clearEnemy = clearEnemy;
+        $scope.importHero = importHero;
+        $scope.clearHero = clearHero;
+		$scope.exportChar = exportChar;
+		$scope.addEnemy = function(){$scope.enemies.push({})};
+        $scope.addHero = function(){$scope.heroes.push({})};
+		$scope.removeEnemy = function(index){   $scope.enemies.splice(index, 1)};
+        $scope.removeHero = function(index){   $scope.heroes.splice(index, 1)};
+		$scope.statsAttack = statsAttack;
+		$scope.statsDefense = statsDefense;
+		$scope.calculateClass = calculateClass;
+		$scope.statsAverageDamage = statsAverageDamage;
 	}]);
     </script>
 </html>
