@@ -2,17 +2,87 @@
 <html lang="en" ng-app='myApp' ng-controller='calc'>
 <head>
     <meta charset="utf-8">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.16/clipboard.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+    <!--
+        red rgb(228,95,86)
+        green rgb(163,211,156)
+        light blue rgb(122,204,200)
+        darg green rgb(74,170,165)
+        dark blud rgb(53,64,79)
+    -->
     <style TYPE="text/css">
-        input{
-        width: 100px;
-        margin: 3px;
+
+        nav.navbar{
+            background-color: rgb(122,204,200);
+        }
+
+        table table.table.fundoVerde{
+            background-color: rgb(163,211,156);
+            border-collapse: separate;
+            border-spacing: 0px 34px;   
+        }
+
+        body{
+            background-color: rgb(163,211,156);
+            color: rgb(53,64,79);
+        }
+
+        table.loginTable{
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 100px;
+            border-collapse: separate;
+            border-spacing: 34px;
+        }
+
+        table.separated{
+            border-collapse: separate;
+            border-spacing: 34px;   
+        }
+
+        .rounded{
+            background-color: rgb(122,204,200);
+            border-radius: 10px;
+            padding: 10px;
+            border-spacing: 10px;
+            border-color: rgb(74,170,165);
+            border-style: solid;
+            border-width: 2px;
+        }
+
+        .jsonfont{
+            font-size: small;
+        }
+
+        table.loginTable div.form-group{
+            margin-bottom: -20px;
+        }
+
+        table.characterTable input[type=number]{
+            width: 50px;
         }
 
         td.bordered{
-            border-style: solid;
-            border-width: 1px;
             width: 50%
+        }
+
+        table.tabelaInternaInimigo{
+            border-collapse: separate; 
+            border-spacing: 10px 0px;
+        }
+
+        td.linhaInimigo{
+            background-color: rgb(122,204,200);
+            border-radius: 10px;
+            padding: 10px;
+            border-spacing: 10px;
+            border-color: rgb(74,170,165);
+            border-style: solid;
+            border-width: 2px;
         }
 
         .big{
@@ -35,76 +105,156 @@
 </head>
 <body>
 <div ng-show="loggedIn">
-    <div><a href="#" ng-click="logOut()">Logout</a><br><br></div>
-    <h3>Digite as estatísticas dos personagens</h3> <a href="#" ng-click="save()">Salvar</a>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <span class="navbar-brand">Challenge Calculator</span>
+            </div>
+            <div class="collapse navbar-collapse">
+              <form class="navbar-form navbar-left">
+                <button type="submit" ng-click="save()" class="btn btn-default">
+                    <span class="glyphicon glyphicon-save" aria-hidden="true"></span>Salvar
+                </button>
+                <button type="submit" ng-click="addEnemy()" class="btn btn-default">
+                    Adicionar inimigo
+                </button>
+                <button type="submit" ng-click="addHero()" class="btn btn-default">
+                    Adicionar herói
+                </button>
+                Redutor de defesa: <input min="0" style="width: 50px" type="number" ng-model="reduction"/>
+                Ignora RD? <input type="checkbox" style="width: 20px" ng-model="ignoreRD"/>
+              </form>
+              <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" ng-click="logOut()">Logout</a>
+                </li>
+              </ul>
+            </div>
+        </div>
+    </nav>
 
-    <table height="40px">
-        <tr>
-            <td>
-                <a href="#" ng-click="addEnemy()">Adicionar inimigo</a><br><br>
-                <a href="#" ng-click="addHero()">Adicionar herói</a><br><br>
-            </td>
-            <td class="bordered" ng-show="enemies.length > 0">
-                Redutor de defesa: <input min="0" type="number" ng-model="reduction"/>
-                Ignora RD? <input type="checkbox" ng-model="ignoreRD"/>
-            </td>
-        </tr>
-    </table>
-
-    <table>
-        <tr>
-            <td>
-                <table style="overflow-y: auto; display: block; height: 700px">
+    <table class="table">
+        <tr class="row">
+            <td class="col-sm-6">
+                <h3>Inimigos</h3>
+                <table class="fundoVerde table" style="overflow-y: auto; width: 100%; display: block;">
                     <tr ng-repeat="enemy in enemies">
-                        <td class="bordered">
-                            Nome: <input type="text" ng-model="enemy.name"/> <br>
-                            NH: <input type="number" ng-model="enemy.nh"/> <br>
-                            Defesa Ativa: <input type="number" ng-model="enemy.defense"/> <br>
-                            Dano: <input type="number" ng-model="enemy.dice"/>d +<input type="number" ng-model="enemy.bonus"/> <br>
-                            RD: <input type="number" ng-model="enemy.rd"/><br><br>
-                            JSON: {{exportChar(enemy)}}<br>
-                            <a href="#" ng-click="removeEnemy($index)">Remover</a>
-                            <a href="#" ng-click="clearEnemy($index)">Limpar</a>
-                            <a href="#" ng-click="importEnemy($index)">Importar</a><br><br>
-                        </td>
-                        <td class="bordered">
-                            <table style="width: 100%; text-align: center">
-                                <tr>
-                                    <th>Herói</th>
-                                    <th>Chance do herói causar dano</th>
-                                    <th>Chance do inimigo causar dano</th>
-                                    <th>Dano médio causado ao herói</th>
-                                </tr>
-                                <tr ng-repeat="hero in validHeroes()">
-                                    <td>{{hero.name}}</td>
-                                    <td class="big" ng-class="calculateClass(true, statsAttack(enemy, hero.name))">{{statsAttack(enemy, hero.name) | number: 2}}%</td>
-                                    <td class="big" ng-class="calculateClass(false, statsDefense(enemy, hero.name))">{{statsDefense(enemy, hero.name) | number: 2}}%</td>
-                                    <td class="big">{{statsAverageDamage(enemy, hero.name) | number: 2}}</td>
-                                </tr>
-                                <tr>
-                                    <td><b>MÉDIA</b></td>
-                                    <td class="big" ng-class="calculateClass(true, statsAttack(enemy, 'total'))">{{enemy.stats.total.attack | number: 2}}%</td>
-                                    <td class="big" ng-class="calculateClass(false, statsDefense(enemy, 'total'))">{{enemy.stats.total.defense | number: 2}}%</td>
-                                    <td class="big">{{statsAverageDamage(enemy, 'total') | number: 2}}</td>
-                                </tr>
+                        <td class="linhaInimigo">
+                            <table class="tabelaInternaInimigo">
+                                <td>
+                                    <table class="table characterTable">
+                                        <tr class="row">
+                                            <td colspan="1" class="left col-sm-2">Nome:</td>
+                                            <td colspan="1" class="col-sm-10"><input type="text" ng-model="enemy.name"/></td>
+                                        </tr>
+                                        <tr class="row">
+                                            <td colspan="1" class="left col-sm-2">NH:</td>
+                                            <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.nh"/></td>
+                                        </tr>
+                                        <tr class="row">
+                                            <td colspan="1" class="left col-sm-2">Defesa Ativa:</td>
+                                            <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.defense"/></td>
+                                        </tr>
+                                        <tr class="row">
+                                            <td colspan="1" class="left col-sm-2">Dano:</td>
+                                            <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.dice"/>d +<input type="number" ng-model="enemy.bonus"/></td>
+                                        </tr>
+                                        <tr class="row">
+                                            <td colspan="1" class="left col-sm-2">RD:</td>
+                                            <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.rd"/></td>
+                                        </tr>
+                                        <tr class="row">
+                                            <td colspan="2" class="col-sm-12" style="text-align: center;">
+                                                <button class="btn btn-sm btn-default" title="Remover" ng-click="removeEnemy($index)">
+                                                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-default" title="Limpar" ng-click="clearEnemy($index)">
+                                                    <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-default" title="Importar" ng-click="importEnemy($index)">
+                                                    <span class="glyphicon glyphicon-paste" aria-hidden="true"></span>
+                                                </button>
+                                                <button data-clipboard-text="{{exportChar(enemy)}}" title="Exportar" class="clipboardButton btn btn-sm btn-default">
+                                                    <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td class="">
+                                    <table class="table" style="width: 100%; text-align: center">
+                                        <tr>
+                                            <th>Herói</th>
+                                            <th>Chance do herói causar dano</th>
+                                            <th>Chance do inimigo causar dano</th>
+                                            <th>Dano médio causado ao herói</th>
+                                        </tr>
+                                        <tr ng-repeat="hero in validHeroes()">
+                                            <td>{{hero.name}}</td>
+                                            <td class="big" ng-class="calculateClass(true, statsAttack(enemy, hero.name))">{{statsAttack(enemy, hero.name) | number: 2}}%</td>
+                                            <td class="big" ng-class="calculateClass(false, statsDefense(enemy, hero.name))">{{statsDefense(enemy, hero.name) | number: 2}}%</td>
+                                            <td class="big">{{statsAverageDamage(enemy, hero.name) | number: 2}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>MÉDIA</b></td>
+                                            <td class="big" ng-class="calculateClass(true, statsAttack(enemy, 'total'))">{{enemy.stats.total.attack | number: 2}}%</td>
+                                            <td class="big" ng-class="calculateClass(false, statsDefense(enemy, 'total'))">{{enemy.stats.total.defense | number: 2}}%</td>
+                                            <td class="big">{{statsAverageDamage(enemy, 'total') | number: 2}}</td>
+                                        </tr>
+                                    </table>
+                                </td>
                             </table>
                         </td>
                     </tr>
                 </table>
             </td>
-            <td>
-                <table style="overflow-y: auto; display: block; height: 700px">
-                    <tr ng-repeat="hero in heroes">
-                        <td class="bordered">
-                            Nome: <input type="text" ng-model="hero.name"/> Ativo <input type="checkbox" ng-model="hero.active"/> <br>
-                            NH: <input type="number" ng-model="hero.nh"/> <br>
-                            Defesa Ativa: <input type="number" ng-model="hero.defense"/> <br>
-                            Dano: <input type="number" ng-model="hero.dice"/>d +<input type="number" ng-model="hero.bonus"/> <br>
-                            RD: <input type="number" ng-model="hero.rd"/><br><br>
-                            JSON: {{exportChar(hero)}}<br>
-                            <a href="#" ng-click="removeHero($index)">Remover</a>
-                            <a href="#" ng-click="clearHero($index)">Limpar</a>
-                            <a href="#" ng-click="importHero($index)">Importar</a><br><br>
+            <td class="col-sm-3">
+                <h3>Heróis</h3>
+                <table class="fundoVerde table" style="overflow-y: auto;  width: 100%; display: block;">
+                    <tr class="" ng-repeat="hero in heroes">
+                        <td class="linhaInimigo">
+                            <table class="table characterTable">
+                                <tr class="row">
+                                    <td colspan="1" class="left col-sm-2">Ativo:</td>
+                                    <td colspan="1" class="col-sm-10"><input type="checkbox" ng-model="hero.active"/></td>
+                                </tr>
+                                <tr class="row">
+                                    <td colspan="1" class="left col-sm-2">Nome:</td>
+                                    <td colspan="1" class="col-sm-10"><input type="text" ng-model="hero.name"/></td>
+                                </tr>
+                                <tr class="row">
+                                    <td colspan="1" class="left col-sm-2">NH:</td>
+                                    <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.nh"/></td>
+                                </tr>
+                                <tr class="row">
+                                    <td colspan="1" class="left col-sm-2">Defesa Ativa:</td>
+                                    <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.defense"/></td>
+                                </tr>
+                                <tr class="row">
+                                    <td colspan="1" class="left col-sm-2">Dano:</td>
+                                    <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.dice"/>d +<input type="number" ng-model="hero.bonus"/></td>
+                                </tr>
+                                <tr class="row">
+                                    <td colspan="1" class="left col-sm-2">RD:</td>
+                                    <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.rd"/></td>
+                                </tr>
+                                <tr class="row">
+                                    <td colspan="2" class="col-sm-12" style="text-align: center; ">
+                                        <button class="btn btn-sm btn-default" title="Remover" ng-click="removeHero($index)">
+                                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                        </button>
+                                        <button class="btn btn-sm btn-default" title="Limpar" ng-click="clearHero($index)">
+                                            <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
+                                        </button>
+                                        <button class="btn btn-sm btn-default" title="Importar" ng-click="importHero($index)">
+                                            <span class="glyphicon glyphicon-paste" aria-hidden="true"></span>
+                                        </button>
+                                        <button data-clipboard-text="{{exportChar(hero)}}" title="Exportar" class="clipboardButton btn btn-sm btn-default">
+                                            <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>
@@ -113,18 +263,65 @@
     </table>
 </div>
 <div ng-show="!loggedIn">
-    <div>username <input type="text" ng-model="username" maxlength="20"></div>
-    <div>senha  <input type="password" ng-model="password" maxlength="20"></div>
-    <div><a href="#" ng-click="logIn()">Login</a><br><br><br><br>
-    <div>username <input type="text" ng-model="newUsername" maxlength="20"></div>
-    <div>senha  <input type="password" ng-model="newPassword" maxlength="20"></div>
-    <div>confirmar senha  <input type="password" ng-model="confirmNewPassword" maxlength="20"></div>
-    <div><a href="#" ng-click="newUser()">Novo Usuário</a><br><br>
+    <table class="loginTable" cellspacing="50px">
+        <tr>
+            <td class="rounded">
+                <form class="form-horizontal">
+                  <div class="form-group">
+                    <label for="inputUsername" class="col-sm-4 control-label">Usuário</label>
+                    <div class="col-sm-6">
+                      <input type="text" maxlength="20" class="form-control" id="inputUsername" ng-model="username" placeholder="Usuário" maxlength="20">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="inputPassword" class="col-sm-4 control-label">Senha</label>
+                    <div class="col-sm-6">
+                      <input type="password" maxlength="20" class="form-control" id="inputPassword" placeholder="Senha" ng-model="password">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="col-sm-offset-4 col-sm-6">
+                      <a class="btn btn-success" href="#" ng-click="logIn()">Acessar</a>
+                    </div>
+                  </div>
+                </form>
+            </td>
+            <td class="rounded">
+                <form class="form-horizontal">
+                  <div class="form-group">
+                    <label for="inputNewUsername" class="col-sm-4 control-label">Usuário</label>
+                    <div class="col-sm-6">
+                      <input type="text" maxlength="20" class="form-control" id="inputNewUsername" ng-model="newUsername" placeholder="Username" maxlength="20">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="inputNewPassword" class="col-sm-4 control-label">Senha</label>
+                    <div class="col-sm-6">
+                      <input type="password" maxlength="20" class="form-control" id="inputNewPassword" placeholder="Senha" ng-model="newPassword">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="inputConfirmPassword" class="col-sm-4 control-label">Confirme a senha</label>
+                    <div class="col-sm-6">
+                      <input type="password" maxlength="20" class="form-control" id="inputConfirmPassword" placeholder="Password" ng-model="confirmNewPassword">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="col-sm-offset-4 col-sm-6">
+                      <a class="btn btn-info" href="#" ng-click="newUser()">Inscrever</a>
+                    </div>
+                  </div>
+                </form>
+            </td>
+        </tr>
+    </table>
 </div>
 </body>
 <script>
 	var app = angular.module('myApp', []);
 	app.controller('calc', ['$scope', '$http', function($scope, $http){
+
+        new Clipboard(".clipboardButton");
 
         var transform = function(obj) {
             var str = [];
@@ -277,15 +474,6 @@
             $scope.loggedIn = false;
         }
 
-        /*
-	    $scope.heroes = [
-	        {"name":"Sports","nh":12,"defense":0,"dice":1,"rd":1},
-	        {"name":"Katze","nh":20,"defense":14,"dice":3, bonus:"-2","rd":6},
-	        {"name":"Gimli","nh":22,"defense":16,"dice":3, bonus:"2","rd":13},
-	        {"name":"Stone","nh":14,"defense":11,"dice":2, bonus:"3","rd":7},
-            {"name":"Abu","nh":20,"defense":15,"dice":1, bonus:"3","rd":1},
-	    ];
-        */
         $scope.heroes = [];
         $scope.enemies = [];
         delete $scope.ignoreRD;
@@ -471,7 +659,7 @@
 		}
 
 		var importEnemy = function(index){
-		    var json = prompt();
+		    var json = prompt("Insira o json:");
 		    if(json != null && json != ""){
 		        $scope.enemies[index] = JSON.parse(json);
             }
