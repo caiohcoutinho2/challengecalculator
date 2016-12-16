@@ -164,6 +164,10 @@
                                             <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.rd"/></td>
                                         </tr>
                                         <tr class="row">
+                                            <td colspan="1" class="left col-sm-2">Quantidade:</td>
+                                            <td colspan="1" class="col-sm-10"><input min="1" type="number" ng-model="enemy.number"/></td>
+                                        </tr>
+                                        <tr class="row">
                                             <td colspan="2" class="col-sm-12" style="text-align: center;">
                                                 <button class="btn btn-sm btn-default" title="Remover" ng-click="removeEnemy($index)">
                                                     <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
@@ -190,12 +194,12 @@
                                             <th>Chance do inimigo causar dano</th>
                                             <th>Dano médio causado ao herói</th>
                                         </tr>
-                                        <tr ng-repeat="hero in validHeroes()">
+                                        <tr ng-repeat="hero in heroes" ng-show="isHeroValid(hero)">
                                             <td>{{hero.name}}</td>
-                                            <td class="big" ng-class="calculateClass(true, statsAttack(enemy, hero.name))">{{statsAttack(enemy, hero.name) | number: 2}}%</td>
-                                            <td class="big">{{statsAverageReceivedDamage(enemy, hero.name) | number: 2}}</td>
-                                            <td class="big" ng-class="calculateClass(false, statsDefense(enemy, hero.name))">{{statsDefense(enemy, hero.name) | number: 2}}%</td>
-                                            <td class="big">{{statsAverageDamage(enemy, hero.name) | number: 2}}</td>
+                                            <td class="big" ng-class="calculateClass(true, statsAttack(enemy, $index))">{{statsAttack(enemy, $index) | number: 2}}%</td>
+                                            <td class="big">{{statsAverageReceivedDamage(enemy, $index) | number: 2}}</td>
+                                            <td class="big" ng-class="calculateClass(false, statsDefense(enemy, $index))">{{statsDefense(enemy, $index) | number: 2}}%</td>
+                                            <td class="big">{{statsAverageDamage(enemy, $index) | number: 2}}</td>
                                         </tr>
                                         <tr>
                                             <td><b>MÉDIA</b></td>
@@ -333,19 +337,8 @@
             return str.join("&");
         }
 
-        var isHeroValid = function(h){
+        $scope.isHeroValid = function(h){
             return h.name != null && h.active;
-        }
-
-        $scope.validHeroes = function(){
-            var valid = [];
-            for(var i = 0; i<$scope.heroes.length; i++){
-                var hero = $scope.heroes[i];
-                if(isHeroValid(hero)){
-                    valid.push(hero);
-                }
-            }
-            return valid;
         }
 
         $scope.loggedIn = false;
@@ -514,23 +507,24 @@
 		    var reduction = $scope.reduction || 0;
             var ignoreRD = $scope.ignoreRD;
             var ignoreReceivedRD = $scope.ignoreRD;
-		    for(var i = 0; i < enemies.length; i++){
-		        var enemy = enemies[i];
-		        var attack = 0;
-		        var defense = 0;
-		        var averageDamage = 0;
+            for(var i = 0; i < enemies.length; i++){
+                var enemy = enemies[i];
+                var attack = 0;
+                var defense = 0;
+                var averageDamage = 0;
                 var averageReceivedDamage = 0;
-		        enemy.stats = {};
+                enemy.stats = {};
+                var numberOfEnemies = enemy.number;
                 var count = 0;
 		        for(var j = 0; j < heroes.length; j++){
                     var hero = heroes[j];
-                    if(isHeroValid(hero)){
+                    if($scope.isHeroValid(hero)){
                         count++;
     		            var hAttack = 100*toDamage(hero.nh, enemy.defense, hero.dice, hero.bonus, enemy.rd);
-    		            var hDefense = 100*toDamage(enemy.nh, hero.defense - reduction, enemy.dice, enemy.bonus, hero.rd, ignoreRD);
-    		            var hAverageDamage = calculateAverageDamage(enemy.dice, enemy.bonus, hero.rd, ignoreRD);
+    		            var hDefense = 100*(1-Math.pow(1-toDamage(enemy.nh, hero.defense - reduction, enemy.dice, enemy.bonus, hero.rd, ignoreRD), numberOfEnemies));
+    		            var hAverageDamage = numberOfEnemies*calculateAverageDamage(enemy.dice, enemy.bonus, hero.rd, ignoreRD);
                         var hAverageReceivedDamage = calculateAverageDamage(hero.dice, hero.bonus, enemy.rd, ignoreReceivedRD);
-    		            enemy.stats[hero.name] = {attack: hAttack, defense: hDefense, averageDamage: hAverageDamage, averageReceivedDamage: hAverageReceivedDamage};
+    		            enemy.stats[j] = {attack: hAttack, defense: hDefense, averageDamage: hAverageDamage, averageReceivedDamage: hAverageReceivedDamage};
                         
     		            attack += hAttack;
     		            defense += hDefense;
@@ -591,20 +585,20 @@
             updateStats();
         });
 
-		var statsAttack = function(enemy, hero){
-		    return enemy.stats[hero].attack;
+		var statsAttack = function(enemy, index){
+		    return enemy.stats[index].attack;
 		}
 
-		var statsDefense = function(enemy, hero){
-		    return enemy.stats[hero].defense;
+		var statsDefense = function(enemy, index){
+		    return enemy.stats[index].defense;
         }
 
-        var statsAverageReceivedDamage = function(enemy, hero){
-            return enemy.stats[hero].averageReceivedDamage;
+        var statsAverageReceivedDamage = function(enemy, index){
+            return enemy.stats[index].averageReceivedDamage;
         }
 
-        var statsAverageDamage = function(enemy, hero){
-            return enemy.stats[hero].averageDamage;
+        var statsAverageDamage = function(enemy, index){
+            return enemy.stats[index].averageDamage;
         }
 
 		var acumulate = function(target, dice){
