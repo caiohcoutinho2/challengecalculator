@@ -359,7 +359,7 @@
             }).then(
                 function(response){
                    if(response.status == 200){
-                        alert("saved sucessfully!");
+                        alert("Sua coleção foi salva com sucesso!");
                    }
                 },
                 function(response){
@@ -474,11 +474,7 @@
         $scope.enemies = [];
         delete $scope.ignoreRD;
         delete $scope.reduction;
-
-        $scope.username = "asd";
-        $scope.password = "123";
-        $scope.logIn();
-
+        
 		var averageDamage = function(dice, bonus){
 			return expect(dice)+ (bonus || 0);
 		};

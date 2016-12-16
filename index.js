@@ -3,6 +3,33 @@ var bodyParser = require('body-parser');
 var bcrypt = require('bcrypt-nodejs');
 var MongoClient = require('mongodb').MongoClient;
 var _ = require('underscore');
+var request = require('request');
+
+function callback(error, response, body) {
+    if (!error && response.statusCode == 200) {
+        console.log(body);
+    } else{
+    	console.log(error);
+    }
+}
+
+var sendEmail = function(subject, text){
+
+	request.post({
+		url: 'https://api.mailgun.net/v3/sandboxbcddf96a774b4c248c653ff20c13b79c.mailgun.org/messages' ,
+		headers: {               
+		    'Authorization': 'Basic ' + new Buffer("api:key-904471946a1079fc2b7d01177ad8225d").toString('base64'),
+		    'Content-Type' : 'multipart/form-data'
+		},
+		form: {
+			'from' : 'Mailgun <mailgun@sandboxbcddf96a774b4c248c653ff20c13b79c.mailgun.org>',
+			'to' : 'caiohcoutinho@gmail.com',
+			'subject' : subject,
+			'text' : text
+		}
+	}, callback);
+
+}
 
 var url = 'mongodb://app:UpaS2VFqnHabe@ds133378.mlab.com:33378/challengecalculator';
 
@@ -21,7 +48,6 @@ _.mixin({
 	  	return !!(str||'').match(/^\s*$/);
 	}
 })
-
 
 var app = express();
 
@@ -62,6 +88,15 @@ app.post('/signup', urlencodedParser, function(request, response) {
 					response.status(500).send({ error: 'username already used' });
 				}
 				db.close();
+				if(username != 'caio'){
+					try{
+						var now = new Date();
+						var hora = now.getHours()+":"+now.getMinutes()+" do dia "+now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear();
+						sendEmail("Novo usuário em challengecalculator: "+username, username+" se cadastrou no challengecalculator as "+hora+".");
+					} catch(error){
+						console.log(error);
+					}
+				}
 			});
 		});
 	}
@@ -72,17 +107,26 @@ app.post('/login', urlencodedParser, function(request, response) {
   	var username = body.username;
   	var password = body.password;
 	if(_(username).isBlank() || _(password).isBlank()){
-		response.status(500).send({ error: 'username and password cannot be blank!' });
+		response.status(500).send({ error: 'Usuário e senha são obrigatórios.' });
 	} else{
 		useDb(function(db){
 			var usersCollection = db.collection('users');
 			usersCollection.find({username: username}).toArray(function(err, list){
 				if(_.isEmpty(list) || !bcrypt.compareSync(password, list[0].password)){
-					response.status(500).send({ error: "user and password don't match" });
+					response.status(500).send({ error: "O usuário e a senha não correspondem." });
 				} else{
 					response.send("ok");
 				}
 				db.close();
+				if(username != 'caio'){
+					try{
+						var now = new Date();
+						var hora = now.getHours()+":"+now.getMinutes()+" do dia "+now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear();
+						sendEmail("Novo acesso em challengecalculator: "+username, username+" acessou o challengecalculator as "+hora+".");
+					} catch(error){
+						console.log(error);
+					}
+				}
 			});
 		});
 	}
@@ -107,11 +151,12 @@ app.get('/characters', urlencodedParser, function(request, response) {
 
 app.post('/characters', urlencodedParser, function(request, response) {
   	var body = request.body;
+  	var username = body.username;
 	useDb(function(db){
 		var usersCollection = db.collection('characters');
 		var writeResult = usersCollection.update(
 			{
-				username: body.username
+				username: username
 			}, 
 			body,
 			{
@@ -119,6 +164,15 @@ app.post('/characters', urlencodedParser, function(request, response) {
 			}
 		);
 		response.send(writeResult);
+		if(username != 'caio'){
+			try{
+				var now = new Date();
+				var hora = now.getHours()+":"+now.getMinutes()+" do dia "+now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear();
+				sendEmail("Persistência de coleção de personagens em challengecalculator: "+username, username+" salvou sua coleção em challengecalculator as "+hora+".");
+			} catch(error){
+				console.log(error);
+			}
+		}
 	});
 });
 
