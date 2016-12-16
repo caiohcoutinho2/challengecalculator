@@ -16,8 +16,6 @@ var useDb = function(f){
 	});
 }
 
-
-
 _.mixin({
 	isBlank: function(str){
 	  	return !!(str||'').match(/^\s*$/);
