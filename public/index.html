@@ -31,6 +31,11 @@
             color: rgb(53,64,79);
         }
 
+        td.tdPanel{
+            background-color: rgb(122,204,200);
+            padding: 20px;
+        }
+
         table.loginTable{
             margin-left: auto;
             margin-right: auto;
@@ -111,6 +116,15 @@
                 <span class="navbar-brand">Challenge Calculator</span>
             </div>
             <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Opções <span class="caret"></span></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="#" ng-click="setDefaultMode()">Cadastro de personagens</a></li>
+                    <li><a href="#" ng-click="setSimulationMode()">Simulação de combate</a></li>
+                  </ul>
+                </li>
+            </ul>
               <form class="navbar-form navbar-left">
                 <button type="submit" ng-click="save()" class="btn btn-default">
                     <span class="glyphicon glyphicon-save" aria-hidden="true"></span>Salvar
@@ -133,141 +147,221 @@
         </div>
     </nav>
 
-    <table class="table">
-        <tr class="row">
-            <td class="col-sm-6">
-                <h3>Inimigos</h3>
-                <table class="fundoVerde table" style="overflow-y: auto; width: 100%; display: block;">
-                    <tr ng-repeat="enemy in enemies">
-                        <td class="linhaInimigo">
-                            <table class="tabelaInternaInimigo">
+    <div ng-show="isSimulationMode">
+        <table class="table">
+            <tr>
+                <td class="col-sm-2 tdPanel">
+                    <form class="form">
+                        <table class="table">
+                            <tr class="row">
                                 <td>
-                                    <table class="table characterTable">
-                                        <tr class="row">
-                                            <td colspan="1" class="left col-sm-2">Nome:</td>
-                                            <td colspan="1" class="col-sm-10"><input type="text" ng-model="enemy.name"/></td>
-                                        </tr>
-                                        <tr class="row">
-                                            <td colspan="1" class="left col-sm-2">NH:</td>
-                                            <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.nh"/></td>
-                                        </tr>
-                                        <tr class="row">
-                                            <td colspan="1" class="left col-sm-2">Defesa Ativa:</td>
-                                            <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.defense"/></td>
-                                        </tr>
-                                        <tr class="row">
-                                            <td colspan="1" class="left col-sm-2">Dano:</td>
-                                            <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.dice"/>d +<input type="number" ng-model="enemy.bonus"/></td>
-                                        </tr>
-                                        <tr class="row">
-                                            <td colspan="1" class="left col-sm-2">RD:</td>
-                                            <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.rd"/></td>
-                                        </tr>
-                                        <tr class="row">
-                                            <td colspan="1" class="left col-sm-2">Quantidade:</td>
-                                            <td colspan="1" class="col-sm-10"><input min="1" type="number" ng-model="enemy.number"/></td>
-                                        </tr>
-                                        <tr class="row">
-                                            <td colspan="2" class="col-sm-12" style="text-align: center;">
-                                                <button class="btn btn-sm btn-default" title="Remover" ng-click="removeEnemy($index)">
-                                                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                                                </button>
-                                                <button class="btn btn-sm btn-default" title="Limpar" ng-click="clearEnemy($index)">
-                                                    <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
-                                                </button>
-                                                <button class="btn btn-sm btn-default" title="Importar" ng-click="importEnemy($index)">
-                                                    <span class="glyphicon glyphicon-paste" aria-hidden="true"></span>
-                                                </button>
-                                                <button data-clipboard-text="{{exportChar(enemy)}}" title="Exportar" class="clipboardButton btn btn-sm btn-default">
-                                                    <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </table>
+                                  <div class="form-group">
+                                    <label for="selectEnemy">Inimigo</label>
+                                    <select ng-model="battleEnemy" class="form-control">
+                                        <option ng-repeat="enemy in enemies" value="{{$index}}">{{enemy.name}}</option>
+                                    </select>
+                                  </div>
+                              </td>
+                            </tr> 
+                            <tr class="row">
+                                <td>
+                                  <div class="form-group">
+                                    <label for="enemyDamageMultiplier">Multiplicador de ferimento sofrido pelo inimigo</label>
+                                    <input ng-model="enemyWoundsModifier" min="0" style="width: 75px;" type="number" step="0.1" class="form-control" id="enemyDamageMultiplier">
+                                  </div>
                                 </td>
-                                <td class="">
-                                    <table class="table" style="width: 100%; text-align: center">
-                                        <tr>
-                                            <th>Herói</th>
-                                            <th>Chance do herói causar dano</th>
-                                            <th>Dano médio causado ao inimigo</th>
-                                            <th>Chance do inimigo causar dano</th>
-                                            <th>Dano médio causado ao herói</th>
-                                        </tr>
-                                        <tr ng-repeat="hero in heroes" ng-show="isHeroValid(hero)">
-                                            <td>{{hero.name}}</td>
-                                            <td class="big" ng-class="calculateClass(true, statsAttack(enemy, $index))">{{statsAttack(enemy, $index) | number: 2}}%</td>
-                                            <td class="big">{{statsAverageReceivedDamage(enemy, $index) | number: 2}}</td>
-                                            <td class="big" ng-class="calculateClass(false, statsDefense(enemy, $index))">{{statsDefense(enemy, $index) | number: 2}}%</td>
-                                            <td class="big">{{statsAverageDamage(enemy, $index) | number: 2}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td><b>MÉDIA</b></td>
-                                            <td class="big" ng-class="calculateClass(true, statsAttack(enemy, 'total'))">{{enemy.stats.total.attack | number: 2}}%</td>
-                                            <td class="big">{{statsAverageReceivedDamage(enemy, 'total') | number: 2}}</td>
-                                            <td class="big" ng-class="calculateClass(false, statsDefense(enemy, 'total'))">{{enemy.stats.total.defense | number: 2}}%</td>
-                                            <td class="big">{{statsAverageDamage(enemy, 'total') | number: 2}}</td>
-                                        </tr>
-                                    </table>
+                            </tr>
+                            <tr class="row">
+                                <td>
+                                  <div class="form-group">
+                                    <label for="selectEnemy">Herói</label>
+                                    <select ng-model="battleHero" class="form-control">
+                                        <option ng-repeat="hero in heroes" value="{{$index}}">{{hero.name}}</option>
+                                    </select>
+                                  </div>
                                 </td>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-            <td class="col-sm-3">
-                <h3>Heróis</h3>
-                <table class="fundoVerde table" style="overflow-y: auto;  width: 100%; display: block;">
-                    <tr class="" ng-repeat="hero in heroes">
-                        <td class="linhaInimigo">
-                            <table class="table characterTable">
-                                <tr class="row">
-                                    <td colspan="1" class="left col-sm-2">Ativo:</td>
-                                    <td colspan="1" class="col-sm-10"><input type="checkbox" ng-model="hero.active"/></td>
-                                </tr>
-                                <tr class="row">
-                                    <td colspan="1" class="left col-sm-2">Nome:</td>
-                                    <td colspan="1" class="col-sm-10"><input type="text" ng-model="hero.name"/></td>
-                                </tr>
-                                <tr class="row">
-                                    <td colspan="1" class="left col-sm-2">NH:</td>
-                                    <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.nh"/></td>
-                                </tr>
-                                <tr class="row">
-                                    <td colspan="1" class="left col-sm-2">Defesa Ativa:</td>
-                                    <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.defense"/></td>
-                                </tr>
-                                <tr class="row">
-                                    <td colspan="1" class="left col-sm-2">Dano:</td>
-                                    <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.dice"/>d +<input type="number" ng-model="hero.bonus"/></td>
-                                </tr>
-                                <tr class="row">
-                                    <td colspan="1" class="left col-sm-2">RD:</td>
-                                    <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.rd"/></td>
-                                </tr>
-                                <tr class="row">
-                                    <td colspan="2" class="col-sm-12" style="text-align: center; ">
-                                        <button class="btn btn-sm btn-default" title="Remover" ng-click="removeHero($index)">
-                                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                                        </button>
-                                        <button class="btn btn-sm btn-default" title="Limpar" ng-click="clearHero($index)">
-                                            <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
-                                        </button>
-                                        <button class="btn btn-sm btn-default" title="Importar" ng-click="importHero($index)">
-                                            <span class="glyphicon glyphicon-paste" aria-hidden="true"></span>
-                                        </button>
-                                        <button data-clipboard-text="{{exportChar(hero)}}" title="Exportar" class="clipboardButton btn btn-sm btn-default">
-                                            <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
-                                        </button>
+                            </tr>
+                            <tr class="row">
+                                <td>
+                                  <div class="form-group">
+                                    <label for="heroDamageMultiplier">Multiplicador de ferimento sofrido pelo herói</label>
+                                    <input ng-model="heroWoundsModifier" min="0" style="width: 75px;" type="number" step="0.1" class="form-control" id="eheroamageMultiplier">
+                                  </div>
+                                </td>
+                            </tr>
+                            <tr class="row">
+                                <td>
+                                  <button class="btn btn-sm btn-success" ng-click="simulate()">Simular!</button>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                </td>
+                <td class="col-sm-10">
+                    <table class="table tdPanel">
+                        <tr class="row" ng-repeat="log in logs">
+                            <td class="col-sm-10">
+                                <span>{{log.text}}</span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div ng-show="isDefaultMode">
+        <table class="table">
+            <tr class="row">
+                <td class="col-sm-6">
+                    <h3>Inimigos</h3>
+                    <table class="fundoVerde table" style="overflow-y: auto; width: 100%; display: block;">
+                        <tr ng-repeat="enemy in enemies">
+                            <td class="linhaInimigo">
+                                <table class="tabelaInternaInimigo">
+                                    <td>
+                                        <table class="table characterTable">
+                                            <tr class="row">
+                                                <td colspan="1" class="left col-sm-2">Nome:</td>
+                                                <td colspan="1" class="col-sm-10"><input type="text" ng-model="enemy.name"/></td>
+                                            </tr>
+                                            <tr class="row">
+                                                <td colspan="1" class="left col-sm-2">NH:</td>
+                                                <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.nh"/></td>
+                                            </tr>
+                                            <tr class="row">
+                                                <td colspan="1" class="left col-sm-2">Defesa Ativa:</td>
+                                                <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.defense"/></td>
+                                            </tr>
+                                            <tr class="row">
+                                                <td colspan="1" class="left col-sm-2">Dano:</td>
+                                                <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.dice"/>d +<input type="number" ng-model="enemy.bonus"/></td>
+                                            </tr>
+                                            <tr class="row">
+                                                <td colspan="1" class="left col-sm-2">RD:</td>
+                                                <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.rd"/></td>
+                                            </tr>
+                                            <tr class="row">
+                                                <td colspan="1" class="left col-sm-2">PV:</td>
+                                                <td colspan="1" class="col-sm-10"><input type="number" ng-model="enemy.hp"/></td>
+                                            </tr>
+                                            <tr class="row">
+                                                <td colspan="1" class="left col-sm-2">Velocidade:</td>
+                                                <td colspan="1" class="col-sm-10"><input type="number" step="0.1" ng-model="enemy.speed"/></td>
+                                            </tr>
+                                            <tr class="row">
+                                                <td colspan="1" class="left col-sm-2">Quantidade:</td>
+                                                <td colspan="1" class="col-sm-10"><input min="1" type="number" ng-model="enemy.number"/></td>
+                                            </tr>
+                                            <tr class="row">
+                                                <td colspan="2" class="col-sm-12" style="text-align: center;">
+                                                    <button class="btn btn-sm btn-default" title="Remover" ng-click="removeEnemy($index)">
+                                                        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-default" title="Limpar" ng-click="clearEnemy($index)">
+                                                        <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-default" title="Importar" ng-click="importEnemy($index)">
+                                                        <span class="glyphicon glyphicon-paste" aria-hidden="true"></span>
+                                                    </button>
+                                                    <button data-clipboard-text="{{exportChar(enemy)}}" title="Exportar" class="clipboardButton btn btn-sm btn-default">
+                                                        <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+                                    <td class="">
+                                        <table class="table" style="width: 100%; text-align: center">
+                                            <tr>
+                                                <th>Herói</th>
+                                                <th>Chance do herói causar dano</th>
+                                                <th>Dano médio causado ao inimigo</th>
+                                                <th>Chance do inimigo causar dano</th>
+                                                <th>Dano médio causado ao herói</th>
+                                            </tr>
+                                            <tr ng-repeat="hero in heroes" ng-show="isHeroValid(hero)">
+                                                <td>{{hero.name}}</td>
+                                                <td class="big" ng-class="calculateClass(true, statsAttack(enemy, $index))">{{statsAttack(enemy, $index) | number: 2}}%</td>
+                                                <td class="big">{{statsAverageReceivedDamage(enemy, $index) | number: 2}}</td>
+                                                <td class="big" ng-class="calculateClass(false, statsDefense(enemy, $index))">{{statsDefense(enemy, $index) | number: 2}}%</td>
+                                                <td class="big">{{statsAverageDamage(enemy, $index) | number: 2}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><b>MÉDIA</b></td>
+                                                <td class="big" ng-class="calculateClass(true, statsAttack(enemy, 'total'))">{{enemy.stats.total.attack | number: 2}}%</td>
+                                                <td class="big">{{statsAverageReceivedDamage(enemy, 'total') | number: 2}}</td>
+                                                <td class="big" ng-class="calculateClass(false, statsDefense(enemy, 'total'))">{{enemy.stats.total.defense | number: 2}}%</td>
+                                                <td class="big">{{statsAverageDamage(enemy, 'total') | number: 2}}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td class="col-sm-3">
+                    <h3>Heróis</h3>
+                    <table class="fundoVerde table" style="overflow-y: auto;  width: 100%; display: block;">
+                        <tr class="" ng-repeat="hero in heroes">
+                            <td class="linhaInimigo">
+                                <table class="table characterTable">
+                                    <tr class="row">
+                                        <td colspan="1" class="left col-sm-2">Ativo:</td>
+                                        <td colspan="1" class="col-sm-10"><input type="checkbox" ng-model="hero.active"/></td>
+                                    </tr>
+                                    <tr class="row">
+                                        <td colspan="1" class="left col-sm-2">Nome:</td>
+                                        <td colspan="1" class="col-sm-10"><input type="text" ng-model="hero.name"/></td>
+                                    </tr>
+                                    <tr class="row">
+                                        <td colspan="1" class="left col-sm-2">NH:</td>
+                                        <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.nh"/></td>
+                                    </tr>
+                                    <tr class="row">
+                                        <td colspan="1" class="left col-sm-2">Defesa Ativa:</td>
+                                        <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.defense"/></td>
+                                    </tr>
+                                    <tr class="row">
+                                        <td colspan="1" class="left col-sm-2">Dano:</td>
+                                        <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.dice"/>d +<input type="number" ng-model="hero.bonus"/></td>
+                                    </tr>
+                                    <tr class="row">
+                                        <td colspan="1" class="left col-sm-2">RD:</td>
+                                        <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.rd"/></td>
+                                    </tr>
+                                    <tr class="row">
+                                        <td colspan="1" class="left col-sm-2">PV:</td>
+                                        <td colspan="1" class="col-sm-10"><input type="number" ng-model="hero.hp"/></td>
+                                    </tr>
+                                    <tr class="row">
+                                        <td colspan="1" class="left col-sm-2">Velocidade:</td>
+                                        <td colspan="1" class="col-sm-10"><input type="number" step="0.1" ng-model="hero.speed"/></td>
+                                    </tr>
+                                    <tr class="row">
+                                        <td colspan="2" class="col-sm-12" style="text-align: center; ">
+                                            <button class="btn btn-sm btn-default" title="Remover" ng-click="removeHero($index)">
+                                                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                            </button>
+                                            <button class="btn btn-sm btn-default" title="Limpar" ng-click="clearHero($index)">
+                                                <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
+                                            </button>
+                                            <button class="btn btn-sm btn-default" title="Importar" ng-click="importHero($index)">
+                                                <span class="glyphicon glyphicon-paste" aria-hidden="true"></span>
+                                            </button>
+                                            <button data-clipboard-text="{{exportChar(hero)}}" title="Exportar" class="clipboardButton btn btn-sm btn-default">
+                                                <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
 </div>
 <div ng-show="!loggedIn">
     <table class="loginTable" cellspacing="50px">
@@ -329,6 +423,18 @@
 	app.controller('calc', ['$scope', '$http', function($scope, $http){
 
         var clipboard = new Clipboard(".clipboardButton");
+
+        $scope.isDefaultMode = true;
+        $scope.isSimulationMode = false;
+
+        $scope.setDefaultMode = function(){
+            $scope.isDefaultMode = true;
+            $scope.isSimulationMode = false;            
+        }
+        $scope.setSimulationMode = function(){
+            $scope.isDefaultMode = false;
+            $scope.isSimulationMode = true;
+        }
 
         clipboard.on('success', function(e) {
             alert("O Json foi copiado para sua área de transferência.\n"+e.text);
@@ -481,6 +587,200 @@
         $scope.enemies = [];
         delete $scope.ignoreRD;
         delete $scope.reduction;
+
+        var Log = function(i, text, isHero){
+            this.index = i;
+            this.text = text;
+            this.isHero = isHero;
+        }
+
+        var roll1d6 = function(){
+            return Math.floor(Math.random() * 6) + 1;
+        }
+
+        var roll3d6 = function(){
+            var soma = 0;
+            soma += roll1d6();
+            soma += roll1d6();
+            soma += roll1d6();
+            return soma;
+        }
+
+        $scope.simulate = function(){
+            var hero = $scope.heroes[$scope.battleHero];
+            var enemy = $scope.enemies[$scope.battleEnemy];
+            var heroWoundsModifier = $scope.heroWoundsModifier;
+            var enemyWoundsModifier = $scope.enemyWoundsModifier;
+
+            if(hero == null || enemy == null || heroWoundsModifier == null || enemyWoundsModifier == null){
+                alert("Todos os campos são obrigatórios para a simulação.");
+                return;
+            }
+
+            var logs = [];
+
+            var i = 0;
+
+            var heroMaxHP = hero.hp;
+            var enemyMaxHP = enemy.hp;
+            var heroNH = hero.nh;
+            var enemyNH = enemy.nh;
+            var heroDice = hero.dice;
+            var enemyDice = enemy.dice;
+            var heroBonus = hero.bonus;
+            var enemyBonus = enemy.bonus;
+            var heroRD = hero.rd;
+            var enemyRD = enemy.rd;
+            var heroSpeed = hero.speed;
+            var enemySpeed = enemy.speed;
+            var heroName = hero.name;
+            var enemyName = enemy.name;
+            var heroDefense = hero.defense;
+            var enemyDefense = enemy.defense;
+
+            var reduction = $scope.reduction;
+
+            var ignoreRD = $scope.ignoreRD;
+
+            if(heroMaxHP == null || heroMaxHP < 1){
+                logs.push(new Log(i++, heroName+" não tem HP configurado. Vamos usar 10.", false));
+                heroMaxHP = 10;
+            }
+            if(enemyMaxHP == null || enemyMaxHP < 1){
+                logs.push(new Log(i++, enemyName+" não tem HP configurado. Vamos usar 10.", false));
+                enemyMaxHP = 10;
+            }
+            if(heroSpeed == null || heroSpeed <= 0){
+                logs.push(new Log(i++, heroName+" não tem velocidade configurada. Vamos usar 6.", false));
+                heroSpeed = 6;
+            }
+            if(enemySpeed == null || enemySpeed <= 0){
+                logs.push(new Log(i++, enemyName+" não tem velocidade configurada. Vamos usar 6.", false));
+                enemySpeed = 6;
+            }
+
+            var heroHP = heroMaxHP;
+            var enemyHP = enemyMaxHP;
+
+            var isHeroTurn = false;
+            if(enemySpeed == heroSpeed){
+                logs.push(new Log(i++, "A velocidade de "+heroName+" é igual a velocidade de "+enemyName+". Vamos sortear quem vai primeiro.", false));
+                isHeroTurn = Math.random() >= 0.5;
+            } else{
+                isHeroTurn = heroSpeed > enemySpeed;
+            }
+
+            if(isHeroTurn){
+                logs.push(new Log(i++, heroName+" vai começar.", true));
+            } else{
+                logs.push(new Log(i++, enemyName+" vai começar.", false));
+            }
+
+            while( i < 500 ){
+                if(isHeroTurn){
+                    var testeNH = roll3d6();
+                    if(testeNH == 3 || 
+                        (testeNH == 4 && heroNH == 14) ||
+                        (testeNH == 5 && heroNH == 15) || 
+                        (testeNH == 6 && heroNH == 16)){
+                        // Crit!
+                        var damage = heroDice * 6 + heroBonus;
+                        if(!ignoreRD){
+                            damage -= enemyRD;
+                        }
+                        if(damage <= 0){
+                            damage = 0;
+                            logs.push(new Log(i++, heroName+" acertou um golpe crítico ("+testeNH+"/"+heroNH+")! Causou "+damage+" de dano, mas a resistência de "+enemyName+" é "+enemyRD+", então nenhum ferimento foi causado.", true)); 
+                        } else{
+                            enemyHP -= Math.floor(damage*enemyWoundsModifier);
+                            logs.push(new Log(i++, heroName+" acertou um golpe crítico ("+testeNH+"/"+heroNH+")! Causou "+damage+" de dano ("+Math.floor(damage*enemyWoundsModifier)+" de ferimentos) e "+enemyName+" agora tem "+enemyHP+" PV restantes.", true));
+                        }
+                    } else{
+                        if(testeNH >= 17 || testeNH > heroNH){
+                            logs.push(new Log(i++, heroName+" errou o golpe ("+testeNH+"/"+heroNH+").", true));                             
+                        } else{
+                            var testeDefesa = roll3d6();
+                            if(testeDefesa <= (enemyDefense-reduction)){
+                                logs.push(new Log(i++, heroName+" tentou um golpe ("+testeNH+"/"+heroNH+") mas "+enemyName+" se defendeu ("+testeDefesa+"/"+(enemyDefense-reduction)+")", true));     
+                            } else{
+                                var damage = heroBonus;
+                                for(var j = 0; j < heroDice; j++){
+                                    damage += roll1d6();
+                                }
+                                if(!ignoreRD){
+                                    damage -= enemyRD;
+                                }
+                                if(damage <= 0){
+                                    damage = 0;
+                                    logs.push(new Log(i++, heroName+" acertou um golpe ("+testeNH+"/"+heroNH+") e causou "+damage+" de dano. A resistência de "+enemyName+" é "+enemyRD+", então nenhum ferimento foi causado.", true)); 
+                                } else{
+                                    enemyHP -= Math.floor(damage*enemyWoundsModifier);
+                                    logs.push(new Log(i++, heroName+" acertou um golpe ("+testeNH+"/"+heroNH+") e causou "+damage+" de dano ("+Math.floor(damage*enemyWoundsModifier)+" de ferimentos). "+enemyName+" agora tem "+enemyHP+" PV restantes.", true)); 
+                                }
+                            }
+                        }
+                    }
+                    if(enemyHP <= 0){
+                        logs.push(new Log(i++, enemyName+" foi derrotado! "+heroName+" ainda tem "+heroHP+" restantes.", true));
+                        break;
+                    }
+                } else{
+                    var testeNH = roll3d6();
+                    if(testeNH == 3 || 
+                        (testeNH == 4 && enemyNH == 14) ||
+                        (testeNH == 5 && enemyNH == 15) || 
+                        (testeNH == 6 && enemyNH == 16)){
+                        // Crit!
+                        var damage = enemyDice * 6 + enemyBonus;
+                        if(!ignoreRD){
+                            damage -= enemyRD;
+                        }
+                        if(damage <= 0){
+                            damage = 0;
+                            logs.push(new Log(i++, enemyName+" acertou um golpe crítico ("+testeNH+"/"+enemyNH+")! Causou "+damage+" de dano, mas a resistência de "+heroName+" é "+heroRD+", então nenhum ferimento foi causado.", false)); 
+                        } else{
+                            heroHP -= Math.floor(damage*heroWoundsModifier);
+                            logs.push(new Log(i++, enemyName+" acertou um golpe crítico ("+testeNH+"/"+enemyNH+")! Causou "+damage+" de dano ("+Math.floor(damage*enemyWoundsModifier)+" de ferimentos) e "+heroName+" agora tem "+heroHP+" PV restantes.", false));
+                        }
+                    } else{
+                        if(testeNH >= 17 || testeNH > enemyNH){
+                            logs.push(new Log(i++, enemyName+" errou o golpe ("+testeNH+"/"+enemyNH+").", false));         
+                        } else{
+                            var testeDefesa = roll3d6();
+                            if(testeDefesa <= (heroDefense-reduction)){
+                                logs.push(new Log(i++, enemyName+" tentou um golpe ("+testeNH+"/"+enemyNH+") mas "+heroName+" se defendeu ("+testeDefesa+"/"+(heroDefense-reduction)+")", false));     
+                            } else{
+                                var damage = enemyBonus;
+                                for(var j = 0; j < enemyDice; j++){
+                                    damage += roll1d6();
+                                }
+                                if(!ignoreRD){
+                                    damage -= enemyRD;
+                                }
+                                if(damage <= 0){
+                                    damage = 0;
+                                    logs.push(new Log(i++, enemyName+" acertou um golpe ("+testeNH+"/"+enemyNH+") e causou "+damage+" de dano. A resistência de "+heroName+" é "+heroRD+", então nenhum ferimento foi causado.", false)); 
+                                } else{
+                                    heroHP -= Math.floor(damage*heroWoundsModifier);
+                                    logs.push(new Log(i++, enemyName+" acertou um golpe ("+testeNH+"/"+enemyNH+") e causou "+damage+" de dano ("+Math.floor(damage*enemyWoundsModifier)+" de ferimentos). "+heroName+" agora tem "+heroHP+" PV restantes.", false)); 
+                                }
+                            }
+                        }
+                    }
+                    if(heroHP <= 0){
+                        logs.push(new Log(i++, heroName+" foi derrotado! "+enemyName+" ainda tem "+enemyHP+" PV restantes.", false));
+                        break;
+                    }
+                }
+                isHeroTurn = !isHeroTurn;
+            }
+
+            if(i == 500){
+                logs.push(new Log(i, "Chega dessa luta ...", false));
+            }
+
+            $scope.logs = logs;
+        }
         
 		var averageDamage = function(dice, bonus){
 			return expect(dice)+ (bonus || 0);
