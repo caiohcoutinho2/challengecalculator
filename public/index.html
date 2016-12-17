@@ -328,7 +328,12 @@
 	var app = angular.module('myApp', []);
 	app.controller('calc', ['$scope', '$http', function($scope, $http){
 
-        new Clipboard(".clipboardButton");
+        var clipboard = new Clipboard(".clipboardButton");
+
+        clipboard.on('success', function(e) {
+            alert("O Json foi copiado para sua área de transferência.\n"+e.text);
+            e.clearSelection();
+        });
 
         var transform = function(obj) {
             var str = [];
@@ -441,6 +446,8 @@
                                     $scope.enemies = data.enemies || [];
                                     $scope.reduction = data.reduction;
                                     $scope.ignoreRD = data.ignoreRD;
+
+                                    updateStats();
                                 }
                             },
                             function(res){
@@ -505,6 +512,9 @@
             var ignoreReceivedRD = $scope.ignoreRD;
             for(var i = 0; i < enemies.length; i++){
                 var enemy = enemies[i];
+                if(enemy.number < 1){
+                    enemy.number = 1;
+                }
                 var attack = 0;
                 var defense = 0;
                 var averageDamage = 0;
