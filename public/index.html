@@ -856,7 +856,10 @@
 		        return 0;
 		    }
 		    var safeBonus = bonus || 0;
-		    var safeRd = !ignoreRD ? rd || 0 : 0;
+            if(rd == null || rd < 0){
+                rd = 0;
+            }
+		    var safeRd = !ignoreRD ? rd : 0;
 
 		    var sum = 0;
 		    var damage = safeRd - safeBonus;
@@ -957,6 +960,9 @@
 		    if(dice == null || dice <= 0){
 		        return 0;
 		    }
+            if(rd == null || rd < 0){
+                rd = 0;
+            }
 		    var safeBonus = bonus || 0;
             var calc = !ignoreRD ? rd - safeBonus : 0;
 		    return toHit(nh, defense)*(1-acumulate(calc, dice));
