@@ -733,14 +733,14 @@
                         // Crit!
                         var damage = enemyDice * 6 + enemyBonus;
                         if(!ignoreRD){
-                            damage -= enemyRD;
+                            damage -= heroRD;
                         }
                         if(damage <= 0){
                             damage = 0;
                             logs.push(new Log(i++, enemyName+" acertou um golpe crítico ("+testeNH+"/"+enemyNH+")! Causou "+damage+" de dano, mas a resistência de "+heroName+" é "+heroRD+", então nenhum ferimento foi causado.", false)); 
                         } else{
                             heroHP -= Math.floor(damage*heroWoundsModifier);
-                            logs.push(new Log(i++, enemyName+" acertou um golpe crítico ("+testeNH+"/"+enemyNH+")! Causou "+damage+" de dano ("+Math.floor(damage*enemyWoundsModifier)+" de ferimentos) e "+heroName+" agora tem "+heroHP+" PV restantes.", false));
+                            logs.push(new Log(i++, enemyName+" acertou um golpe crítico ("+testeNH+"/"+enemyNH+")! Causou "+damage+" de dano ("+Math.floor(damage*heroWoundsModifier)+" de ferimentos) e "+heroName+" agora tem "+heroHP+" PV restantes.", false));
                         }
                     } else{
                         if(testeNH >= 17 || testeNH > enemyNH){
@@ -755,14 +755,14 @@
                                     damage += roll1d6();
                                 }
                                 if(!ignoreRD){
-                                    damage -= enemyRD;
+                                    damage -= heroRD;
                                 }
                                 if(damage <= 0){
                                     damage = 0;
                                     logs.push(new Log(i++, enemyName+" acertou um golpe ("+testeNH+"/"+enemyNH+") e causou "+damage+" de dano. A resistência de "+heroName+" é "+heroRD+", então nenhum ferimento foi causado.", false)); 
                                 } else{
                                     heroHP -= Math.floor(damage*heroWoundsModifier);
-                                    logs.push(new Log(i++, enemyName+" acertou um golpe ("+testeNH+"/"+enemyNH+") e causou "+damage+" de dano ("+Math.floor(damage*enemyWoundsModifier)+" de ferimentos). "+heroName+" agora tem "+heroHP+" PV restantes.", false)); 
+                                    logs.push(new Log(i++, enemyName+" acertou um golpe ("+testeNH+"/"+enemyNH+") e causou "+damage+" de dano ("+Math.floor(damage*heroWoundsModifier)+" de ferimentos). "+heroName+" agora tem "+heroHP+" PV restantes.", false)); 
                                 }
                             }
                         }
@@ -812,7 +812,7 @@
             var ignoreReceivedRD = $scope.ignoreRD;
             for(var i = 0; i < enemies.length; i++){
                 var enemy = enemies[i];
-                if(enemy.number < 1){
+                if(enemy.number == null || enemy.number < 1){
                     enemy.number = 1;
                 }
                 var attack = 0;
@@ -855,6 +855,9 @@
 		    if(safeDice == 0){
 		        return 0;
 		    }
+            if(bonus == null || bonus < 0){
+                bonus = 0;
+            }
 		    var safeBonus = bonus || 0;
             if(rd == null || rd < 0){
                 rd = 0;
@@ -962,6 +965,9 @@
 		    }
             if(rd == null || rd < 0){
                 rd = 0;
+            }
+            if(bonus == null || bonus < 0){
+                bonus = 0;
             }
 		    var safeBonus = bonus || 0;
             var calc = !ignoreRD ? rd - safeBonus : 0;
