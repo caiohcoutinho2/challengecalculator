@@ -15,6 +15,8 @@ function callback(error, response, body) {
 
 var sendEmail = function(subject, text){
 
+	return ;
+
 	request.post({
 		url: 'https://api.mailgun.net/v3/sandboxbcddf96a774b4c248c653ff20c13b79c.mailgun.org/messages' ,
 		headers: {               
@@ -31,21 +33,16 @@ var sendEmail = function(subject, text){
 
 }
 
-var url = 'mongodb://app:UpaS2VFqnHabe@ds133378.mlab.com:33378/challengecalculator';
-
-var useDb = function(f){
-	MongoClient.connect(url, function(err, db) {
-		if(!_.isNull(err)){
-			console.log(err);
-		}else{
-			f(db);
-		}
-	});
-}
+var url = "mongodb+srv://challengecalculator:Kq9vMqC3BbwKCvJB@challengecalculator.d0chh2x.mongodb.net/?retryWrites=true&w=majority";
+const client = new MongoClient(url);
+let db = client.db("challengecalculator");
 
 _.mixin({
 	isBlank: function(str){
 	  	return !!(str||'').match(/^\s*$/);
+	},
+	isNullOrUndefined: function(obj){
+		return _.isNull(obj) || _.isUndefined(obj);
 	}
 })
 
@@ -73,31 +70,29 @@ app.post('/signup', urlencodedParser, function(request, response) {
 	if(_(username).isBlank() || _(password).isBlank()){
 		res.status(500).send({ error: 'username and password cannot be blank!' });
 	} else{
-		useDb(function(db){
-			var usersCollection = db.collection('users');
-			usersCollection.find({username: username}).toArray(function(err, list){
-				if(_.isEmpty(list)){
-					usersCollection.insert({
-						username: username,
-						password: bcrypt.hashSync(password, bcrypt.genSaltSync(8), null)
-					}, function(err, res){
-						response.send("ok");
-						db.close();
-					});
-				} else{
-					response.status(500).send({ error: 'username already used' });
+		var usersCollection = db.collection('users');
+		usersCollection.find({username: username}).toArray(function(err, list){
+			if(_.isEmpty(list)){
+				usersCollection.insertOne({
+					username: username,
+					password: bcrypt.hashSync(password, bcrypt.genSaltSync(8), null)
+				}, function(err, res){
+					response.send("ok");
+					//db.close();
+				});
+			} else{
+				response.status(500).send({ error: 'username already used' });
+			}
+			//db.close();
+			if(username != 'caio'){
+				try{
+					var now = new Date();
+					var hora = now.getHours()+":"+now.getMinutes()+" do dia "+now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear();
+					sendEmail("Novo usuário em challengecalculator: "+username, username+" se cadastrou no challengecalculator as "+hora+".");
+				} catch(error){
+					console.log(error);
 				}
-				db.close();
-				if(username != 'caio'){
-					try{
-						var now = new Date();
-						var hora = now.getHours()+":"+now.getMinutes()+" do dia "+now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear();
-						sendEmail("Novo usuário em challengecalculator: "+username, username+" se cadastrou no challengecalculator as "+hora+".");
-					} catch(error){
-						console.log(error);
-					}
-				}
-			});
+			}
 		});
 	}
 });
@@ -109,25 +104,23 @@ app.post('/login', urlencodedParser, function(request, response) {
 	if(_(username).isBlank() || _(password).isBlank()){
 		response.status(500).send({ error: 'Usuário e senha são obrigatórios.' });
 	} else{
-		useDb(function(db){
-			var usersCollection = db.collection('users');
-			usersCollection.find({username: username}).toArray(function(err, list){
-				if(_.isEmpty(list) || !bcrypt.compareSync(password, list[0].password)){
-					response.status(500).send({ error: "O usuário e a senha não correspondem." });
-				} else{
-					response.send("ok");
+		var usersCollection = db.collection('users');
+		usersCollection.find({username: username}).toArray(function(err, list){
+			if(_.isEmpty(list) || !bcrypt.compareSync(password, list[0].password)){
+				response.status(500).send({ error: "O usuário e a senha não correspondem." });
+			} else{
+				response.send("ok");
+			}
+			//db.close();
+			if(username != 'caio'){
+				try{
+					var now = new Date();
+					var hora = now.getHours()+":"+now.getMinutes()+" do dia "+now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear();
+					sendEmail("Novo acesso em challengecalculator: "+username, username+" acessou o challengecalculator as "+hora+".");
+				} catch(error){
+					console.log(error);
 				}
-				db.close();
-				if(username != 'caio'){
-					try{
-						var now = new Date();
-						var hora = now.getHours()+":"+now.getMinutes()+" do dia "+now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear();
-						sendEmail("Novo acesso em challengecalculator: "+username, username+" acessou o challengecalculator as "+hora+".");
-					} catch(error){
-						console.log(error);
-					}
-				}
-			});
+			}
 		});
 	}
 });
@@ -138,46 +131,67 @@ app.get('/characters', urlencodedParser, function(request, response) {
 	if(_.isUndefined(username) || _(username).isBlank()){
 		response.status(500).send({ error: 'username cannot be blank!' });
 	} else{
-		useDb(function(db){
-			var charactersCollection = db.collection('characters');
-			charactersCollection.find({username: username}).toArray(function(err, list){
-				var result = list[0];
-				response.send(result);
-				db.close();
-			});
+		var charactersCollection = db.collection('characters');
+		charactersCollection.find({username: username}).toArray(function(err, list){
+			var result = list[0];
+			response.send(result.body);
+			//db.close();
 		});
 	}
 });
 
-app.post('/characters', urlencodedParser, function(request, response) {
+let characterPostHandler = async function(request, response) {
   	var body = request.body;
   	var username = body.username;
-	useDb(function(db){
-		var usersCollection = db.collection('characters');
-		var writeResult = usersCollection.update(
-			{
-				username: username
-			}, 
-			body,
-			{
-				upsert: true,
-			}
-		);
-		response.send(writeResult);
-		if(username != 'caio'){
-			try{
-				var now = new Date();
-				var hora = now.getHours()+":"+now.getMinutes()+" do dia "+now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear();
-				sendEmail("Persistência de coleção de personagens em challengecalculator: "+username, username+" salvou sua coleção em challengecalculator as "+hora+".");
-			} catch(error){
-				console.log(error);
-			}
+	var usersCollection = db.collection('characters');
+	    
+  const filter = { username: username };
+  
+  const options = { upsert: true };
+  
+  const updateDoc = { $set: { body: body } };
+
+	var writeResult = await usersCollection.updateOne(filter, updateDoc, options);
+	
+	response.send(writeResult);
+	if(username != 'caio'){
+		try{
+			var now = new Date();
+			var hora = now.getHours()+":"+now.getMinutes()+" do dia "+now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear();
+			sendEmail("Persistência de coleção de personagens em challengecalculator: "+username, username+" salvou sua coleção em challengecalculator as "+hora+".");
+		} catch(error){
+			console.log(error);
 		}
-	});
-});
+	}
+};
+
+app.post('/characters', urlencodedParser, characterPostHandler);
 
 app.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));
 });
 
 
+
+process.stdin.resume();//so the program will not close instantly
+
+async function exitHandler(options, exitCode) {
+		await client.close();
+    if (options.cleanup){
+			console.log('clean');
+    } 
+    if (exitCode || exitCode === 0){
+			console.log(exitCode);
+    } 
+    if (options.exit) {
+    	process.exit();
+    }
+}
+
+//do something when app is closing
+process.on('exit', exitHandler.bind(null, {cleanup:true}));
+
+process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
+process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
+process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
